@@ -15,7 +15,7 @@ const PLAYER_NAMES = [
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Jeopardy: You vs Robots (HTML Mock)</title>
+    <title>Bookshelf: You VS Robots</title>
     @include('inline-styles')
     <style>
         /* overlay spinner */
@@ -110,7 +110,7 @@ const PLAYER_NAMES = [
     <header>
         <div class="brand">
             <div>
-                <h1>You vs Robots</h1>
+                <h1>Bookshelf: You vs Robots</h1>
                 <form method="GET" action="{{ route('game.reset') }}" class="inline">
                     @csrf
                     <button type="submit" class="btn-muted">Start Over</button>
