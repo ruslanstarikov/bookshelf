@@ -11,19 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('answers', function (Blueprint $table) {
+        Schema::create('turns', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('session_id');
             $table->unsignedBigInteger('player_id');
-            $table->text('question');
-            $table->string('isbn');
-            $table->text('title');
-            $table->text('received_title')->nullable();
+            $table->unsignedBigInteger('round_id');
+            $table->string('isbn')->nullable();
+            $table->string('title')->nullable();
+            $table->string('author')->nullable();
             $table->integer('score');
+            $table->string('canonical_title')->nullable();
             $table->timestamps();
 
-            $table->index('session_id');
             $table->index('player_id');
+            $table->index('round_id');
         });
     }
 
@@ -32,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('answers');
+        Schema::dropIfExists('turns');
     }
 };

@@ -1,56 +1,63 @@
-// app/Http/Controllers/GameController.php
 <?php
 
 namespace App\Http\Controllers;
 
+use App\Models\Round;
+use App\Models\Turn;
 use Illuminate\Http\Request;
 use App\Services\GameService;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class GameController extends Controller
 {
     public function index(Request $request)
     {
-        // seed scoreboard & history in session
-        $request->session()->put('game.history', $request->session()->get('game.history', []));
-        $request->session()->put('game.scores', $request->session()->get('game.scores', [
-            'HAL-9000' => 0, 'RoboLit' => 0, 'BookTron' => 0,
-        ]));
+        $sessionId = $request->session()->get('session_id');
 
-        return view('game.index', [
-            'round'   => count($request->session()->get('game.history')) + 1,
-            'scores'  => $request->session()->get('game.scores'),
-            'history' => $request->session()->get('game.history'),
-            'current' => null,
+        if (!$sessionId) {
+            $sessionId = Str::uuid()->toString();
+            $request->session()->put('session_id', $sessionId);
+        }
+
+        $latestRound = Round::with('turns')->where('session_id', $sessionId)
+            ->orderByDesc('round')
+            ->first();
+
+        $previousRounds = Round::with('turns')->where('session_id', $sessionId)
+            ->where('id', '!=', optional($latestRound)->id)
+            ->orderBy('round', 'asc')
+            ->get();
+
+        $scores = Turn::query()
+            ->whereIn('round_id', Round::where('session_id', $sessionId)->select('id'))
+            ->whereNotNull('player_id')                     // optional
+            ->select('player_id', DB::raw('SUM(score) AS total_score'))
+            ->groupBy('player_id')
+            ->orderByDesc('total_score')
+            ->get();
+        foreach($scores as &$score)
+        {
+            $score->name = GameService::PLAYERS[$score->player_id];
+        }
+        return view('game', [
+            'last_round' => $latestRound,
+            'rounds' => $previousRounds,
+            'players' => $scores
         ]);
     }
 
     public function round(Request $request, GameService $service)
     {
-        $clue = trim((string) $request->input('clue', ''));
-        abort_if($clue === '', 422, 'Clue required');
-
-        // Call your 3 agents + score (no web lookup by agents; Google Books only in validation)
-        $results = $service->playRound($clue);
-
-        // update session totals + history
-        $scores  = $request->session()->get('game.scores', []);
-        foreach ($results as $r) {
-            $scores[$r['guess']['name']] = ($scores[$r['guess']['name']] ?? 0) + $r['score'];
+        $session_id = $request->session()->get('session_id');
+        $prompt = trim((string) $request->input('clue', ''));
+        $security = GameService::securityGuard($prompt);
+        if($security['is_valid']) {
+            GameService::playRound($session_id, $prompt);
+            return ['status' => 'ok'];
         }
-        $history = $request->session()->get('game.history', []);
-        $history[] = $results;
-
-        $request->session()->put('game.scores', $scores);
-        $request->session()->put('game.history', $history);
-
-        // HTMX: return just the parts we want to update
-        // - the board (podiums) and the header scores
-        // Use out-of-band swaps to touch multiple targets at once.
-        return response()->view('game.partials.board', [
-            'results' => $results,
-        ])->header('HX-Trigger', json_encode([
-            'updateScores' => ['scores' => $scores, 'round' => count($history) + 1],
-            'appendHistory' => ['roundResults' => $results, 'index' => count($history)],
-        ]));
+        else {
+            return ['status' => 'error'];
+        }
     }
 }
