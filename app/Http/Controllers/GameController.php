@@ -11,6 +11,10 @@ use Illuminate\Support\Str;
 
 class GameController extends Controller
 {
+    public function indexIndex()
+    {
+        return redirect('/game');
+    }
     public function index(Request $request)
     {
         $sessionId = $request->session()->get('session_id');
@@ -38,7 +42,7 @@ class GameController extends Controller
             ->get();
         foreach($scores as &$score)
         {
-            $score->name = GameService::PLAYERS[$score->player_id];
+            $score->name = GameService::ID_TO_PLAYER[$score->player_id];
         }
         return view('game', [
             'last_round' => $latestRound,
@@ -59,5 +63,11 @@ class GameController extends Controller
         else {
             return ['status' => 'error'];
         }
+    }
+
+    public function reset(Request $request)
+    {
+        $request->session()->forget('session_id');
+        return redirect('/game');
     }
 }

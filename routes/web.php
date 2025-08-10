@@ -9,3 +9,4 @@ Route::get('/', function () {
 });
 Route::get('/game', [GameController::class, 'index'])->name('game.index');
 Route::post('/game/round', [GameController::class, 'round'])->name('game.round');
+Route::get('/game/reset', [GameController::class, 'reset'])->name('game.reset');

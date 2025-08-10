@@ -14,6 +14,11 @@ use Prism\Prism\Schema\StringSchema;
 
 class GameService
 {
+    const ID_TO_PLAYER = [
+        1 => 'Mistral',
+        2 => 'ChatGPT Lite',
+        3 => 'ChatGPT'
+    ];
     const PLAYERS = [
         [
             'id' => 1,
@@ -26,6 +31,12 @@ class GameService
             'provider' => Provider::OpenAI,
             'model' => 'gpt-4.1-mini',
             'name' => 'ChatGPT Lite'
+        ],
+        [
+            'id' => 3,
+            'provider' => Provider::OpenAI,
+            'model' => 'gpt-4.1',
+            'name' => 'ChatGPT'
         ],
     ];
     public static function getRoundNumber(string $session_id)

@@ -1,10 +1,3 @@
-<?php
-    const PLAYER_NAMES = [
-		1 => 'Mistral',
-        2 => 'ChatGPT Mini',
-        3 => 'ChatGPT'
-    ]
-?>
 <div class="history-item">
     <div class="muted" style="margin-bottom:8px">Round {{ $round->round }}</div>
     <div class="history-grid">
